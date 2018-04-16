@@ -1,1 +1,1 @@
-# databasecreator
+DatabaseBuilder - .NET helper library to upgrade a versioned database from sql script files in a folder structure

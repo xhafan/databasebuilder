@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27428.2005
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DatabaseBuilder", "DatabaseBuilder\DatabaseBuilder.csproj", "{81BBAD78-6CBA-4BFB-BE25-1515DE889087}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{04253639-EC4A-45C8-84A0-040735AF394A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DatabaseBuilder.Tests", "DatabaseBuilder.Tests\DatabaseBuilder.Tests.csproj", "{443CD13C-1BC4-4F7E-A211-1837A9B205D2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{81BBAD78-6CBA-4BFB-BE25-1515DE889087}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81BBAD78-6CBA-4BFB-BE25-1515DE889087}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81BBAD78-6CBA-4BFB-BE25-1515DE889087}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81BBAD78-6CBA-4BFB-BE25-1515DE889087}.Release|Any CPU.Build.0 = Release|Any CPU
+		{443CD13C-1BC4-4F7E-A211-1837A9B205D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{443CD13C-1BC4-4F7E-A211-1837A9B205D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{443CD13C-1BC4-4F7E-A211-1837A9B205D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{443CD13C-1BC4-4F7E-A211-1837A9B205D2}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{443CD13C-1BC4-4F7E-A211-1837A9B205D2} = {04253639-EC4A-45C8-84A0-040735AF394A}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F2EAF7B9-C857-4203-B8D7-702A581D1302}
+	EndGlobalSection
+EndGlobal

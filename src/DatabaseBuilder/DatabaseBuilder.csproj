@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net40;netstandard2.0</TargetFrameworks>
+    <Description>Helper library library to create or upgrade versioned database from sql script files in a folder structure</Description>
+    <PackageTags>Database builder sql</PackageTags>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <Version>1.0.0-beta</Version>
+    <Authors>Martin Havlista</Authors>
+    <Company></Company>
+    <Product />
+    <PackageProjectUrl>https://github.com/xhafan/databasebuilder</PackageProjectUrl>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/xhafan/databasebuilder/master/LICENSE</PackageLicenseUrl>
+    <PackageReleaseNotes></PackageReleaseNotes>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<connectionStrings>
+  <add 
+    name="DatabaseBuilderTestsConnection" 
+    connectionString="Data Source=DatabaseBuilderTests.db;New=True;"
+    providerName="sqlite"
+    />
+</connectionStrings>
