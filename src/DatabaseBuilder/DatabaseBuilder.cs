@@ -33,7 +33,6 @@ namespace DatabaseBuilder
         {
             _ApplyChangeScripts($"{folderWithSqlFiles}\\{_changeScriptsFolderName}", dbConnection, transaction);
             _ApplyOtherScripts($"{folderWithSqlFiles}\\{_otherScriptsFolderName}", dbConnection, transaction);
-
         }
 
         private void _ApplyChangeScripts(string folderWithSqlFiles, IDbConnection dbConnection, IDbTransaction transaction)
@@ -62,7 +61,7 @@ namespace DatabaseBuilder
                 _ApplyOneSqlScript(changeScriptSqlFile, dbConnection, transaction);
             }
 
-            _UpdateDatabaseVersion(dbConnection, transaction, orderedChangeScriptSqlFiles);
+            _UpdateDatabaseVersion(dbConnection, transaction, orderedChangeScriptSqlFiles.Last());
         }
 
         private string _GetChangeScriptVersionFromFullFileName(string changeScriptFileFullName)
@@ -101,9 +100,9 @@ namespace DatabaseBuilder
             return new DatabaseVersion(0, 0, 0, 0);
         }
 
-        private void _UpdateDatabaseVersion(IDbConnection dbConnection, IDbTransaction transaction, List<string> changeScriptSqlFiles)
+        private void _UpdateDatabaseVersion(IDbConnection dbConnection, IDbTransaction transaction, string lastChangeScriptSqlFile)
         {
-            var lastChangeScriptVersion = _GetChangeScriptVersionFromFullFileName(changeScriptSqlFiles.Last());
+            var lastChangeScriptVersion = _GetChangeScriptVersionFromFullFileName(lastChangeScriptSqlFile);
             var databaseVersionOfLastChangeScript = new DatabaseVersion(lastChangeScriptVersion);
 
             using (var command = dbConnection.CreateCommand())
@@ -120,17 +119,20 @@ namespace DatabaseBuilder
 
         private void _ApplyOtherScripts(string folderWithSqlFiles, IDbConnection dbConnection, IDbTransaction transaction)
         {
-            var folders = Directory.GetDirectories(folderWithSqlFiles)
+            var sqlScriptFilesOrderedByName = Directory.GetFiles(folderWithSqlFiles, _sqlScriptFileSearchPattern)
                 .OrderBy(x => x)
                 .ToList();
-            var sqlScriptFiles = Directory.GetFiles(folderWithSqlFiles, _sqlScriptFileSearchPattern).OrderBy(x => x).ToList();
 
-            foreach (var sqlScriptFile in sqlScriptFiles)
+            foreach (var sqlScriptFile in sqlScriptFilesOrderedByName)
             {
                 _ApplyOneSqlScript(sqlScriptFile, dbConnection, transaction);
             }
 
-            foreach (var folder in folders)
+            var foldersOrderedByName = Directory.GetDirectories(folderWithSqlFiles)
+                .OrderBy(x => x)
+                .ToList();
+
+            foreach (var folder in foldersOrderedByName)
             {
                 _ApplyOtherScripts(folder, dbConnection, transaction);
             }

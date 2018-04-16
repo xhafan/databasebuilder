@@ -32,18 +32,7 @@ namespace DatabaseBuilder.Tests
         [SetUp]
         public void TestFixtureSetUp()
         {
-#if NETCOREAPP2_0
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json");
-            var configuration = builder.Build();
-            _dbProviderName = configuration["providerName"];
-            _connectionString = configuration.GetConnectionString("DatabaseBuilderTestsConnection");            
-#else
-            var connectionStringSettings = ConfigurationManager.ConnectionStrings["DatabaseBuilderTestsConnection"];
-            _dbProviderName = connectionStringSettings.ProviderName;
-            _connectionString = connectionStringSettings.ConnectionString;
-#endif
+            _LoadDbProviderAndConnectionString();
 
             _assemblyLocation = _GetAssemblyLocation();
             FolderWithSqlFiles = $"{_assemblyLocation}\\TestDatabase\\{_dbProviderName}";
@@ -51,6 +40,22 @@ namespace DatabaseBuilder.Tests
             _newChangeScriptName = $"{changeScriptsFolder}\\1.0.0.10.sql";
 
             DeleteNewChangeScriptIfExits();
+        }
+
+        private void _LoadDbProviderAndConnectionString()
+        {
+#if NETCOREAPP2_0
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json");
+            var configuration = builder.Build();
+            _dbProviderName = configuration["providerName"];
+            _connectionString = configuration.GetConnectionString("DatabaseBuilderTestsConnection");
+#else
+            var connectionStringSettings = ConfigurationManager.ConnectionStrings["DatabaseBuilderTestsConnection"];
+            _dbProviderName = connectionStringSettings.ProviderName;
+            _connectionString = connectionStringSettings.ConnectionString;
+#endif
         }
 
         protected void DeleteNewChangeScriptIfExits()

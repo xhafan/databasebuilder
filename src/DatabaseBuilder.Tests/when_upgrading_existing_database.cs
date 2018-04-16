@@ -34,7 +34,7 @@ namespace DatabaseBuilder.Tests
         }
 
         [Test]
-        public void new_table_is_created_by_new_change_script()
+        public void new_change_script_is_applied()
         {
             var text = ExecuteSqlQuery<string>("select Text2 from DataTable where Id = 1").Single();
             text.ShouldBe("some other text");
