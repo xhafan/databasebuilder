@@ -20,12 +20,14 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.4.1" />
     <PackageReference Include="System.Data.SqlClient" Version="4.4.3" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.9.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.6.0" />
     <PackageReference Include="Npgsql" Version="3.2.7" />
     <PackageReference Include="Dapper" Version="1.50.4" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="2.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.0.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -38,6 +40,9 @@
     <None Remove="connectionStrings.config.postgresql" />
     <None Remove="connectionStrings.config.sqlite" />
     <None Remove="connectionStrings.config.sqlserver" />
+    <None Remove="appsettings.json.postgresql" />
+    <None Remove="appsettings.json.sqlite" />
+    <None Remove="appsettings.json.sqlserver" />
     <None Remove="set_postgresql_db.bat" />
     <None Remove="set_sqlite_db.bat" />
     <None Remove="set_sql_server_db.bat" />
@@ -51,6 +56,9 @@
 
   <ItemGroup>
     <None Update="App.config" />
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>

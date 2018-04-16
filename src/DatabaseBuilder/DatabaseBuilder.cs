@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
@@ -11,19 +12,21 @@ namespace DatabaseBuilder
         private readonly string _versionTableName;
         private readonly string _changeScriptsFolderName;
         private readonly string _otherScriptsFolderName;
-        private readonly string _scriptFileSearchPattern;
+        private readonly string _sqlScriptFileExtension;
+        private readonly string _sqlScriptFileSearchPattern;
 
         public DatabaseBuilder(
             string versionTableName = "Version", 
             string changeScriptsFolderName = "ChangeScripts",
             string otherScriptsFolderName = "OtherScripts",
-            string scriptFileSearchPattern = "*.sql"
+            string sqlScriptFileExtension = ".sql"
             )
         {
-            _scriptFileSearchPattern = scriptFileSearchPattern;
             _versionTableName = versionTableName;
             _changeScriptsFolderName = changeScriptsFolderName;
             _otherScriptsFolderName = otherScriptsFolderName;
+            _sqlScriptFileExtension = sqlScriptFileExtension;
+            _sqlScriptFileSearchPattern = $"*{_sqlScriptFileExtension}";
         }
 
         public void UpgradeDatabase(string folderWithSqlFiles, IDbConnection dbConnection, IDbTransaction transaction)
@@ -35,19 +38,73 @@ namespace DatabaseBuilder
 
         private void _ApplyChangeScripts(string folderWithSqlFiles, IDbConnection dbConnection, IDbTransaction transaction)
         {
-            var changeScriptSqlFiles = Directory.GetFiles(folderWithSqlFiles, _scriptFileSearchPattern).OrderBy(x => x).ToList(); // todo: order files by version number
-    
-            foreach (var changeScriptSqlFile in changeScriptSqlFiles)
+            var currentDatabaseVersion = _GetDatabaseVersion(dbConnection, transaction);
+
+            var changeScriptSqlFiles = Directory.GetFiles(folderWithSqlFiles, _sqlScriptFileSearchPattern);
+            var orderedChangeScriptSqlFiles = changeScriptSqlFiles
+                .OrderBy(changeScriptFileFullName =>
+                {
+                    var version = _GetChangeScriptVersionFromFullFileName(changeScriptFileFullName);
+                    return new DatabaseVersion(version);
+                })
+                .ToList();
+
+            var changeScriptSqlFilesGreaterThanCurrentDatabaseVersion = orderedChangeScriptSqlFiles.Where(
+                changeScriptFileFullName =>
+                {
+                    var version = _GetChangeScriptVersionFromFullFileName(changeScriptFileFullName);
+                    return new DatabaseVersion(version).CompareTo(currentDatabaseVersion) > 0;
+                }).ToList();
+
+
+            foreach (var changeScriptSqlFile in changeScriptSqlFilesGreaterThanCurrentDatabaseVersion)
             {
                 _ApplyOneSqlScript(changeScriptSqlFile, dbConnection, transaction);
             }
 
-            _UpdateDatabaseVersion(dbConnection, transaction, changeScriptSqlFiles);
+            _UpdateDatabaseVersion(dbConnection, transaction, orderedChangeScriptSqlFiles);
+        }
+
+        private string _GetChangeScriptVersionFromFullFileName(string changeScriptFileFullName)
+        {
+            var indexOfLastBackslash = changeScriptFileFullName.LastIndexOf("\\", StringComparison.Ordinal);
+            var changeScriptFileName = changeScriptFileFullName.Substring(indexOfLastBackslash + 1);
+            return changeScriptFileName.Substring(0, changeScriptFileName.Length - _sqlScriptFileExtension.Length);
+        }
+
+        private DatabaseVersion _GetDatabaseVersion(IDbConnection dbConnection, IDbTransaction transaction)
+        {
+            try
+            {
+                using (var command = dbConnection.CreateCommand())
+                {
+                    command.CommandText = $"select Major, Minor, Revision, ScriptNumber from {_versionTableName}";
+                    command.Transaction = transaction;
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        if (!reader.Read()) throw new CannotReadDatabaseVersionException();
+                        var major = reader.GetInt32(0);
+                        var minor = reader.GetInt32(1);
+                        var revision = reader.GetInt32(2);
+                        var scriptNumber = reader.GetInt32(3);
+                        return new DatabaseVersion(major, minor, revision, scriptNumber);
+                    }
+                }
+            }
+            catch (CannotReadDatabaseVersionException)
+            {
+                throw;
+            }
+            catch {}
+
+            return new DatabaseVersion(0, 0, 0, 0);
         }
 
         private void _UpdateDatabaseVersion(IDbConnection dbConnection, IDbTransaction transaction, List<string> changeScriptSqlFiles)
         {
-            var databaseVersionOfLastChangeScript = new DatabaseVersion(changeScriptSqlFiles.Last());
+            var lastChangeScriptVersion = _GetChangeScriptVersionFromFullFileName(changeScriptSqlFiles.Last());
+            var databaseVersionOfLastChangeScript = new DatabaseVersion(lastChangeScriptVersion);
 
             using (var command = dbConnection.CreateCommand())
             {
@@ -63,10 +120,10 @@ namespace DatabaseBuilder
 
         private void _ApplyOtherScripts(string folderWithSqlFiles, IDbConnection dbConnection, IDbTransaction transaction)
         {
-            var folders = Directory.GetDirectories(folderWithSqlFiles) // todo: remove change script folder
+            var folders = Directory.GetDirectories(folderWithSqlFiles)
                 .OrderBy(x => x)
                 .ToList();
-            var sqlScriptFiles = Directory.GetFiles(folderWithSqlFiles, "*.sql").OrderBy(x => x).ToList(); // todo: order files by version number
+            var sqlScriptFiles = Directory.GetFiles(folderWithSqlFiles, _sqlScriptFileSearchPattern).OrderBy(x => x).ToList();
 
             foreach (var sqlScriptFile in sqlScriptFiles)
             {

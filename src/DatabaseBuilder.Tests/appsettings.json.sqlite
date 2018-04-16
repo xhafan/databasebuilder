@@ -1,0 +1,6 @@
+{
+  "providerName": "sqlite",
+  "ConnectionStrings": {
+    "DatabaseBuilderTestsConnection": "Data Source=DatabaseBuilderTests.db;New=True;"
+  }
+}

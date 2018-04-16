@@ -1,0 +1,6 @@
+{
+  "providerName": "sqlserver",
+  "ConnectionStrings": {
+    "DatabaseBuilderTestsConnection": "Server=localhost; User=databasebuildertests;Password=password01;Initial Catalog=DatabaseBuilderTests;"
+  }
+}

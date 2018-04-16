@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using System.Data.SQLite;
@@ -11,26 +10,45 @@ using Dapper;
 using Npgsql;
 using NUnit.Framework;
 
+#if !NETCOREAPP2_0
+using System.Configuration;
+#endif  
+
+#if NETCOREAPP2_0
+using Microsoft.Extensions.Configuration;
+#endif
+
 namespace DatabaseBuilder.Tests
 {
     public abstract class BaseUpgradingDatabase
     {
-        protected ConnectionStringSettings _connectionStringSettings;
-        protected string _connectionStringProviderName;
-        protected string _assemblyLocation;
-        protected string _newChangeScriptName;
-        protected string _folderWithSqlFiles;
+        private string _connectionString;
+        private string _dbProviderName;
+        private string _assemblyLocation;
+        private string _newChangeScriptName;
+
+        protected string FolderWithSqlFiles;
 
         [SetUp]
         public void TestFixtureSetUp()
         {
-            _connectionStringSettings = ConfigurationManager.ConnectionStrings["DatabaseBuilderTestsConnection"];
-            _connectionStringProviderName = _connectionStringSettings.ProviderName;
+#if NETCOREAPP2_0
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json");
+            var configuration = builder.Build();
+            _dbProviderName = configuration["providerName"];
+            _connectionString = configuration.GetConnectionString("DatabaseBuilderTestsConnection");            
+#else
+            var connectionStringSettings = ConfigurationManager.ConnectionStrings["DatabaseBuilderTestsConnection"];
+            _dbProviderName = connectionStringSettings.ProviderName;
+            _connectionString = connectionStringSettings.ConnectionString;
+#endif
 
             _assemblyLocation = _GetAssemblyLocation();
-            _folderWithSqlFiles = $"{_assemblyLocation}\\TestDatabase\\{_connectionStringProviderName}";
-            var changeScriptsFolder = $"{_folderWithSqlFiles}\\ChangeScripts";
-            _newChangeScriptName = $"{changeScriptsFolder}\\1.0.0.3.sql";
+            FolderWithSqlFiles = $"{_assemblyLocation}\\TestDatabase\\{_dbProviderName}";
+            var changeScriptsFolder = $"{FolderWithSqlFiles}\\ChangeScripts";
+            _newChangeScriptName = $"{changeScriptsFolder}\\1.0.0.10.sql";
 
             DeleteNewChangeScriptIfExits();
         }
@@ -43,13 +61,9 @@ namespace DatabaseBuilder.Tests
         protected void CreateNewChangeScript()
         {
             File.WriteAllText(_newChangeScriptName, @"
-create table AnotherDataTable (
-   Id INT not null,
-   [Text] NVARCHAR(MAX) null,
-   primary key (Id)
-)
-
-insert into AnotherDataTable (Id, [Text]) VALUES (2, 'some other text')
+alter table DataTable add Text2 nvarchar(max) null
+go
+update DataTable SET Text2 = 'some other text' where id = 1
 ");
         }
 
@@ -57,13 +71,12 @@ insert into AnotherDataTable (Id, [Text]) VALUES (2, 'some other text')
         {
             try { ExecuteSql("drop table Version"); } catch (SqlException) {}
             try { ExecuteSql("drop table DataTable"); } catch (SqlException) {}
-            try { ExecuteSql("drop table AnotherDataTable"); } catch (SqlException) {}
             try { ExecuteSql("drop view DataTableDto"); } catch (SqlException) {}
         }
 
         protected void ExecuteWithinTransaction(Action<IDbConnection, IDbTransaction> actionToExecute)
         {
-            using (var connection = _GetDbConnection(_connectionStringSettings))
+            using (var connection = _GetDbConnection())
             {
                 connection.Open();
                 using (var tx = connection.BeginTransaction())
@@ -85,7 +98,7 @@ insert into AnotherDataTable (Id, [Text]) VALUES (2, 'some other text')
 
         protected IEnumerable<T> ExecuteSqlQuery<T>(string sql)
         {
-            using (var connection = _GetDbConnection(_connectionStringSettings))
+            using (var connection = _GetDbConnection())
             {
                 connection.Open();
                 return connection.Query<T>(sql);
@@ -94,7 +107,7 @@ insert into AnotherDataTable (Id, [Text]) VALUES (2, 'some other text')
 
         protected void ExecuteSql(string sql)
         {
-            using (var connection = _GetDbConnection(_connectionStringSettings))
+            using (var connection = _GetDbConnection())
             {
                 connection.Open();
                 connection.Execute(sql);
@@ -107,18 +120,16 @@ insert into AnotherDataTable (Id, [Text]) VALUES (2, 'some other text')
         }
 
 
-        private IDbConnection _GetDbConnection(ConnectionStringSettings connectionStringSettings)
+        private IDbConnection _GetDbConnection()
         {
-            var connectionString = connectionStringSettings.ConnectionString;
-
-            switch (_connectionStringProviderName)
+            switch (_dbProviderName)
             {
                 case string x when x.Contains("sqlite"):
-                    return new SQLiteConnection(connectionString);
+                    return new SQLiteConnection(_connectionString);
                 case string x when x.Contains("sqlserver"):
-                    return new SqlConnection(connectionString);
+                    return new SqlConnection(_connectionString);
                 case string x when x.Contains("postgresql"):
-                    return new NpgsqlConnection(connectionString);
+                    return new NpgsqlConnection(_connectionString);
                 default:
                     throw new Exception("Unsupported database provider");
             }

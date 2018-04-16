@@ -15,7 +15,7 @@ namespace DatabaseBuilder.Tests
             ExecuteWithinTransaction((connection, transaction) =>
             {
                 DropDatabaseObjectsToMakeDatabaseEmpty();                
-                databaseBuilder.UpgradeDatabase(_folderWithSqlFiles, connection, transaction);
+                databaseBuilder.UpgradeDatabase(FolderWithSqlFiles, connection, transaction);
             });
         }
 
