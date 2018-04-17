@@ -141,15 +141,22 @@ namespace DatabaseBuilder
             var lastChangeScriptVersion = _GetChangeScriptVersionFromFullFileName(lastChangeScriptSqlFile);
             var databaseVersionOfLastChangeScript = new DatabaseVersion(lastChangeScriptVersion);
 
-            using (var command = dbConnection.CreateCommand())
+            try
             {
-                command.CommandText = $"update \"{_versionTableName}\" set " +
-                                      $"    Major = {databaseVersionOfLastChangeScript.Major}, " +
-                                      $"    Minor = {databaseVersionOfLastChangeScript.Minor}, " +
-                                      $"    Revision = {databaseVersionOfLastChangeScript.Revision}, " +
-                                      $"    ScriptNumber = {databaseVersionOfLastChangeScript.ScriptNumber}";
-                command.Transaction = transaction;
-                command.ExecuteNonQuery();
+                using (var command = dbConnection.CreateCommand())
+                {
+                    command.CommandText = $"update \"{_versionTableName}\" set " +
+                                          $"    Major = {databaseVersionOfLastChangeScript.Major}, " +
+                                          $"    Minor = {databaseVersionOfLastChangeScript.Minor}, " +
+                                          $"    Revision = {databaseVersionOfLastChangeScript.Revision}, " +
+                                          $"    ScriptNumber = {databaseVersionOfLastChangeScript.ScriptNumber}";
+                    command.Transaction = transaction;
+                    command.ExecuteNonQuery();    
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Cannot update database version in table {_versionTableName}", ex);
             }
         }
 
