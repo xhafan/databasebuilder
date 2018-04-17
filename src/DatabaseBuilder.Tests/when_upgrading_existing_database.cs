@@ -12,9 +12,10 @@ namespace DatabaseBuilder.Tests
         {
             var databaseBuilder = new DatabaseBuilder();
 
+            DropDatabaseObjectsToMakeDatabaseEmpty();
+
             ExecuteWithinTransaction((connection, transaction) =>
             {
-                DropDatabaseObjectsToMakeDatabaseEmpty();
                 databaseBuilder.UpgradeDatabase(FolderWithSqlFiles, connection, transaction);
             });
 

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
@@ -95,9 +94,10 @@ namespace DatabaseBuilder
             {
                 throw;
             }
-            catch {}
-
-            return new DatabaseVersion(0, 0, 0, 0);
+            catch
+            {
+                return new DatabaseVersion(0, 0, 0, 0);
+            }            
         }
 
         private void _UpdateDatabaseVersion(IDbConnection dbConnection, IDbTransaction transaction, string lastChangeScriptSqlFile)
@@ -149,7 +149,14 @@ namespace DatabaseBuilder
                 {
                     command.CommandText = sqlBatch;
                     command.Transaction = transaction;
-                    command.ExecuteNonQuery();
+                    try
+                    {
+                        command.ExecuteNonQuery();
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception($"Error executing script {sqlScriptFile}, sql batch:\n\n{sqlBatch}", ex);
+                    }
                 }
             }
         }

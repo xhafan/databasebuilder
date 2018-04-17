@@ -66,7 +66,7 @@ namespace DatabaseBuilder.Tests
         protected void CreateNewChangeScript()
         {
             File.WriteAllText(_newChangeScriptName, @"
-alter table DataTable add Text2 nvarchar(max) null
+alter table DataTable add Text2 null;
 go
 update DataTable SET Text2 = 'some other text' where id = 1
 ");
@@ -74,9 +74,9 @@ update DataTable SET Text2 = 'some other text' where id = 1
 
         protected void DropDatabaseObjectsToMakeDatabaseEmpty()
         {
-            try { ExecuteSql("drop table Version"); } catch (SqlException) {}
-            try { ExecuteSql("drop table DataTable"); } catch (SqlException) {}
-            try { ExecuteSql("drop view DataTableDto"); } catch (SqlException) {}
+            try { ExecuteSql("drop table Version"); } catch {}
+            try { ExecuteSql("drop table DataTable"); } catch {}
+            try { ExecuteSql("drop view DataTableDto"); } catch {}
         }
 
         protected void ExecuteWithinTransaction(Action<IDbConnection, IDbTransaction> actionToExecute)
