@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Diagnostics;
+using System.Linq;
 using NUnit.Framework;
 using Shouldly;
 
@@ -10,14 +11,11 @@ namespace DatabaseBuilder.Tests
         [SetUp]
         public void Context()
         {
-            var databaseBuilder = new DatabaseBuilder();
+            var databaseBuilder = new DatabaseBuilder(GetDbConnection);
 
             DropDatabaseObjectsToMakeDatabaseEmpty();
 
-            ExecuteWithinTransaction((connection, transaction) =>
-            {
-                databaseBuilder.UpgradeDatabase(FolderWithSqlFiles, connection, transaction);
-            });
+            databaseBuilder.UpgradeDatabase(FolderWithSqlFiles);
         }
 
         [Test]
@@ -30,7 +28,7 @@ namespace DatabaseBuilder.Tests
         [Test]
         public void database_view_was_created()
         {
-            var text = ExecuteSqlQuery<string>("select Text from DataTableDto where Id = 1").Single();
+            var text = ExecuteSqlQuery<string>("select Text from \"DataTableDto\" where Id = 1").Single();
             text.ShouldBe("some text");
         }
     }

@@ -66,44 +66,22 @@ namespace DatabaseBuilder.Tests
         protected void CreateNewChangeScript()
         {
             File.WriteAllText(_newChangeScriptName, @"
-alter table DataTable add Text2 null;
+alter table ""DataTable"" add Text2 Text null;
 go
-update DataTable SET Text2 = 'some other text' where id = 1
+update ""DataTable"" SET Text2 = 'some other text' where id = 1
 ");
         }
 
         protected void DropDatabaseObjectsToMakeDatabaseEmpty()
         {
-            try { ExecuteSql("drop table Version"); } catch {}
-            try { ExecuteSql("drop table DataTable"); } catch {}
-            try { ExecuteSql("drop view DataTableDto"); } catch {}
-        }
-
-        protected void ExecuteWithinTransaction(Action<IDbConnection, IDbTransaction> actionToExecute)
-        {
-            using (var connection = _GetDbConnection())
-            {
-                connection.Open();
-                using (var tx = connection.BeginTransaction())
-                {
-                    try
-                    {
-                        actionToExecute(connection, tx);
-
-                        tx.Commit();
-                    }
-                    catch
-                    {
-                        tx.Rollback();
-                        throw;
-                    }
-                }
-            }
+            try { ExecuteSql("drop table \"Version\""); } catch {}
+            try { ExecuteSql("drop view \"DataTableDto\""); } catch { }
+            try { ExecuteSql("drop table \"DataTable\""); } catch {}
         }
 
         protected IEnumerable<T> ExecuteSqlQuery<T>(string sql)
         {
-            using (var connection = _GetDbConnection())
+            using (var connection = GetDbConnection())
             {
                 connection.Open();
                 return connection.Query<T>(sql);
@@ -112,7 +90,7 @@ update DataTable SET Text2 = 'some other text' where id = 1
 
         protected void ExecuteSql(string sql)
         {
-            using (var connection = _GetDbConnection())
+            using (var connection = GetDbConnection())
             {
                 connection.Open();
                 connection.Execute(sql);
@@ -121,11 +99,11 @@ update DataTable SET Text2 = 'some other text' where id = 1
 
         protected DatabaseVersion GetCurrentDatabaseVersion()
         {
-            return ExecuteSqlQuery<DatabaseVersion>("select * from Version").Single();
+            return ExecuteSqlQuery<DatabaseVersion>("select * from \"Version\"").Single();
         }
 
 
-        private IDbConnection _GetDbConnection()
+        protected IDbConnection GetDbConnection()
         {
             switch (_dbProviderName)
             {

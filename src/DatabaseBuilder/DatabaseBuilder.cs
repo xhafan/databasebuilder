@@ -8,6 +8,7 @@ namespace DatabaseBuilder
 {
     public class DatabaseBuilder
     {
+        private readonly Func<IDbConnection> _getConnectionFunc;
         private readonly string _versionTableName;
         private readonly string _changeScriptsFolderName;
         private readonly string _otherScriptsFolderName;
@@ -15,12 +16,14 @@ namespace DatabaseBuilder
         private readonly string _sqlScriptFileSearchPattern;
 
         public DatabaseBuilder(
+            Func<IDbConnection> getConnectionFunc,
             string versionTableName = "Version", 
             string changeScriptsFolderName = "ChangeScripts",
             string otherScriptsFolderName = "OtherScripts",
             string sqlScriptFileExtension = ".sql"
             )
         {
+            _getConnectionFunc = getConnectionFunc;
             _versionTableName = versionTableName;
             _changeScriptsFolderName = changeScriptsFolderName;
             _otherScriptsFolderName = otherScriptsFolderName;
@@ -28,16 +31,24 @@ namespace DatabaseBuilder
             _sqlScriptFileSearchPattern = $"*{_sqlScriptFileExtension}";
         }
 
-        public void UpgradeDatabase(string folderWithSqlFiles, IDbConnection dbConnection, IDbTransaction transaction)
+        public void UpgradeDatabase(string folderWithSqlFiles)
         {
-            _ApplyChangeScripts($"{folderWithSqlFiles}\\{_changeScriptsFolderName}", dbConnection, transaction);
-            _ApplyOtherScripts($"{folderWithSqlFiles}\\{_otherScriptsFolderName}", dbConnection, transaction);
+            var currentDatabaseVersion = _GetDatabaseVersion();
+
+            _ExecuteWithinTransaction((connection, transaction) =>
+            {
+                _ApplyChangeScripts(currentDatabaseVersion, $"{folderWithSqlFiles}\\{_changeScriptsFolderName}", connection, transaction);
+                _ApplyOtherScripts($"{folderWithSqlFiles}\\{_otherScriptsFolderName}", connection, transaction);
+            });
         }
 
-        private void _ApplyChangeScripts(string folderWithSqlFiles, IDbConnection dbConnection, IDbTransaction transaction)
+        private void _ApplyChangeScripts(
+            DatabaseVersion currentDatabaseVersion, 
+            string folderWithSqlFiles,
+            IDbConnection dbConnection, 
+            IDbTransaction transaction
+            )
         {
-            var currentDatabaseVersion = _GetDatabaseVersion(dbConnection, transaction);
-
             var changeScriptSqlFiles = Directory.GetFiles(folderWithSqlFiles, _sqlScriptFileSearchPattern);
             var orderedChangeScriptSqlFiles = changeScriptSqlFiles
                 .OrderBy(changeScriptFileFullName =>
@@ -70,34 +81,59 @@ namespace DatabaseBuilder
             return changeScriptFileName.Substring(0, changeScriptFileName.Length - _sqlScriptFileExtension.Length);
         }
 
-        private DatabaseVersion _GetDatabaseVersion(IDbConnection dbConnection, IDbTransaction transaction)
+        private void _ExecuteWithinTransaction(Action<IDbConnection, IDbTransaction> actionToExecute)
         {
-            try
+            using (var connection = _getConnectionFunc())
             {
-                using (var command = dbConnection.CreateCommand())
+                connection.Open();
+                using (var tx = connection.BeginTransaction())
                 {
-                    command.CommandText = $"select Major, Minor, Revision, ScriptNumber from {_versionTableName}";
-                    command.Transaction = transaction;
-
-                    using (var reader = command.ExecuteReader())
+                    try
                     {
-                        if (!reader.Read()) throw new CannotReadDatabaseVersionException();
-                        var major = reader.GetInt32(0);
-                        var minor = reader.GetInt32(1);
-                        var revision = reader.GetInt32(2);
-                        var scriptNumber = reader.GetInt32(3);
-                        return new DatabaseVersion(major, minor, revision, scriptNumber);
+                        actionToExecute(connection, tx);
+
+                        tx.Commit();
+                    }
+                    catch
+                    {
+                        tx.Rollback();
+                        throw;
                     }
                 }
             }
-            catch (CannotReadDatabaseVersionException)
+        }
+
+        private DatabaseVersion _GetDatabaseVersion()
+        {
+            DatabaseVersion databaseVersion = new DatabaseVersion(0, 0, 0, 0);
+
+            _ExecuteWithinTransaction((connection, transaction) =>
             {
-                throw;
-            }
-            catch
-            {
-                return new DatabaseVersion(0, 0, 0, 0);
-            }            
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = $"select Major, Minor, Revision, ScriptNumber from \"{_versionTableName}\"";
+                    command.Transaction = transaction;
+
+                    try
+                    {
+                        using (var reader = command.ExecuteReader())
+                        {
+                            if (!reader.Read()) throw new CannotReadDatabaseVersionException();
+                            var major = reader.GetInt32(0);
+                            var minor = reader.GetInt32(1);
+                            var revision = reader.GetInt32(2);
+                            var scriptNumber = reader.GetInt32(3);
+                            databaseVersion = new DatabaseVersion(major, minor, revision, scriptNumber);
+                        }
+                    }
+                    catch (CannotReadDatabaseVersionException)
+                    {
+                        throw;
+                    }
+                    catch {}
+                }
+            });
+            return databaseVersion;
         }
 
         private void _UpdateDatabaseVersion(IDbConnection dbConnection, IDbTransaction transaction, string lastChangeScriptSqlFile)
@@ -107,7 +143,7 @@ namespace DatabaseBuilder
 
             using (var command = dbConnection.CreateCommand())
             {
-                command.CommandText = $"update {_versionTableName} set " +
+                command.CommandText = $"update \"{_versionTableName}\" set " +
                                       $"    Major = {databaseVersionOfLastChangeScript.Major}, " +
                                       $"    Minor = {databaseVersionOfLastChangeScript.Minor}, " +
                                       $"    Revision = {databaseVersionOfLastChangeScript.Revision}, " +
