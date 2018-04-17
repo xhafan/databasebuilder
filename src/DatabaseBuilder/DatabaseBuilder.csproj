@@ -4,9 +4,9 @@
     <TargetFrameworks>net40;netstandard2.0</TargetFrameworks>
     <Description>Helper library to upgrade a versioned database from sql script files in a folder structure</Description>
     <PackageTags>Database builder sql</PackageTags>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
-    <Version>1.0.0-beta</Version>
+    <AssemblyVersion>1.0.1.0</AssemblyVersion>
+    <FileVersion>1.0.1.0</FileVersion>
+    <Version>1.0.1-beta</Version>
     <Authors>Martin Havlista</Authors>
     <Company></Company>
     <Product />
