@@ -74,7 +74,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="rmdir $(OutDir)\TestDatabase /S /Q &gt;nul&#xD;&#xA;xcopy $(ProjectDir)TestDatabase $(OutDir)\TestDatabase /E /I /Y &gt;nul" />
+    <Exec Command="rmdir $(OutDir)\TestDatabase /S /Q &gt;nul 2&gt;nul&#xD;&#xA;xcopy $(ProjectDir)TestDatabase $(OutDir)\TestDatabase /E /I /Y &gt;nul" />
   </Target>
 
 </Project>
