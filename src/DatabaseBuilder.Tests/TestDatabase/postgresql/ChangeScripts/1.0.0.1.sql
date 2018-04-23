@@ -5,6 +5,5 @@ create table "Version"
     , Revision int
     , ScriptNumber int
 );
-go
 
 INSERT INTO "Version" (Major, Minor, Revision, ScriptNumber) VALUES (1, 0, 0, 0);
