@@ -65,13 +65,14 @@ namespace DatabaseBuilder
                     return new DatabaseVersion(version).CompareTo(currentDatabaseVersion) > 0;
                 }).ToList();
 
+            if (!changeScriptSqlFilesGreaterThanCurrentDatabaseVersion.Any()) return;
 
             foreach (var changeScriptSqlFile in changeScriptSqlFilesGreaterThanCurrentDatabaseVersion)
             {
                 _ApplyOneSqlScript(changeScriptSqlFile, dbConnection, transaction);
             }
 
-            _UpdateDatabaseVersion(dbConnection, transaction, orderedChangeScriptSqlFiles.Last());
+            _UpdateDatabaseVersion(dbConnection, transaction, changeScriptSqlFilesGreaterThanCurrentDatabaseVersion.Last());
         }
 
         private string _GetChangeScriptVersionFromFullFileName(string changeScriptFileFullName)
