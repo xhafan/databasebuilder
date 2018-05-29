@@ -37,8 +37,8 @@ namespace DatabaseBuilder
 
             _ExecuteWithinTransaction((connection, transaction) =>
             {
-                _ApplyChangeScripts(currentDatabaseVersion, $"{folderWithSqlFiles}\\{_changeScriptsFolderName}", connection, transaction);
-                _ApplyOtherScripts($"{folderWithSqlFiles}\\{_otherScriptsFolderName}", connection, transaction);
+                _ApplyChangeScripts(currentDatabaseVersion, Path.Combine(folderWithSqlFiles, _changeScriptsFolderName), connection, transaction);
+                _ApplyOtherScripts(Path.Combine(folderWithSqlFiles, _otherScriptsFolderName), connection, transaction);
             });
         }
 
@@ -77,7 +77,7 @@ namespace DatabaseBuilder
 
         private string _GetChangeScriptVersionFromFullFileName(string changeScriptFileFullName)
         {
-            var indexOfLastBackslash = changeScriptFileFullName.LastIndexOf("\\", StringComparison.Ordinal);
+            var indexOfLastBackslash = changeScriptFileFullName.LastIndexOf(Path.DirectorySeparatorChar);
             var changeScriptFileName = changeScriptFileFullName.Substring(indexOfLastBackslash + 1);
             return changeScriptFileName.Substring(0, changeScriptFileName.Length - _sqlScriptFileExtension.Length);
         }

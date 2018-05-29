@@ -121,7 +121,7 @@ update ""DataTable"" SET Text2 = 'some other text' where id = 1
         private string _GetAssemblyLocation()
         {
             var assemblyLocation = Assembly.GetExecutingAssembly().Location;
-            var indexOfLastBackslash = assemblyLocation.LastIndexOf("\\", StringComparison.Ordinal);
+            var indexOfLastBackslash = assemblyLocation.LastIndexOf(Path.DirectorySeparatorChar);
             return assemblyLocation.Substring(0, indexOfLastBackslash);
         }
     }
