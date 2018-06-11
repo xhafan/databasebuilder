@@ -4,15 +4,15 @@
     <TargetFrameworks>net40;netstandard2.0</TargetFrameworks>
     <Description>Helper library to upgrade a versioned database from sql script files in a folder structure</Description>
     <PackageTags>Database builder sql</PackageTags>
-    <AssemblyVersion>1.0.3.0</AssemblyVersion>
-    <FileVersion>1.0.3.0</FileVersion>
-    <Version>1.0.3</Version>
+    <AssemblyVersion>1.0.4.0</AssemblyVersion>
+    <FileVersion>1.0.4.0</FileVersion>
+    <Version>1.0.4</Version>
     <Authors>Martin Havlista</Authors>
     <Company></Company>
     <Product />
     <PackageProjectUrl>https://github.com/xhafan/databasebuilder</PackageProjectUrl>
     <PackageLicenseUrl>https://raw.githubusercontent.com/xhafan/databasebuilder/master/LICENSE</PackageLicenseUrl>
-    <PackageReleaseNotes>Made folder separator cross-platform</PackageReleaseNotes>
+    <PackageReleaseNotes>Fixed DB rollback throwing exception</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
