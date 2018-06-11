@@ -97,7 +97,7 @@ namespace DatabaseBuilder
                     }
                     catch
                     {
-                        tx.Rollback();
+                        try { tx.Rollback(); } catch {}
                         throw;
                     }
                 }
