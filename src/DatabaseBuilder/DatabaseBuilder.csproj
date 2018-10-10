@@ -2,17 +2,17 @@
 
   <PropertyGroup>
     <TargetFrameworks>net40;netstandard2.0</TargetFrameworks>
-    <Version>1.0.5</Version>
+    <Version>1.0.6</Version>
     <AssemblyVersion>$(Version).0</AssemblyVersion>
     <FileVersion>$(Version).0</FileVersion>
-    <Description>Refactoring - renamed DatabaseBuilder to BuilderOfDatabase to avoid the class name collision with the namespace; renamed "OtherScripts" directory to "ReRunnableScripts"; renamed other things to better express their meaning</Description>
+    <Description>Helper library to upgrade a versioned database from sql script files in a folder structure</Description>
     <PackageTags>Database builder sql</PackageTags>
     <Authors>Martin Havlišta</Authors>
     <Company></Company>
     <Product />
     <PackageProjectUrl>https://github.com/xhafan/databasebuilder</PackageProjectUrl>
     <PackageLicenseUrl>https://raw.githubusercontent.com/xhafan/databasebuilder/master/LICENSE</PackageLicenseUrl>
-    <PackageReleaseNotes>Fixed DB rollback throwing exception</PackageReleaseNotes>
+    <PackageReleaseNotes>Refactoring - renamed class DatabaseBuilder to BuilderOfDatabase to avoid the class name collision with the namespace; renamed "OtherScripts" directory to "ReRunnableScripts"; renamed other things to better express their meaning</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
