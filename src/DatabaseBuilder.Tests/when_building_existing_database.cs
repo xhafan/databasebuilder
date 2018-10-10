@@ -5,20 +5,20 @@ using Shouldly;
 namespace DatabaseBuilder.Tests
 {
     [TestFixture]
-    public class when_upgrading_existing_database : BaseUpgradingDatabase
+    public class when_building_existing_database : BaseBuildingDatabase
     {
         [SetUp]
         public void Context()
         {
-            var databaseBuilder = new DatabaseBuilder(GetDbConnection);
+            var builderOfDatabase = new BuilderOfDatabase(GetDbConnection);
 
             DropDatabaseObjectsToMakeDatabaseEmpty();
 
-            databaseBuilder.UpgradeDatabase(FolderWithSqlFiles);
+            builderOfDatabase.BuildDatabase(SqlFilesDirectoryPath);
 
             CreateNewChangeScript();
 
-            databaseBuilder.UpgradeDatabase(FolderWithSqlFiles);
+            builderOfDatabase.BuildDatabase(SqlFilesDirectoryPath);
         }
 
         [Test]

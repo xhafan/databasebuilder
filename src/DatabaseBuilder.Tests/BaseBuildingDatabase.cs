@@ -20,14 +20,14 @@ using Microsoft.Extensions.Configuration;
 
 namespace DatabaseBuilder.Tests
 {
-    public abstract class BaseUpgradingDatabase
+    public abstract class BaseBuildingDatabase
     {
         private string _connectionString;
         private string _dbProviderName;
         private string _assemblyLocation;
         private string _newChangeScriptName;
 
-        protected string FolderWithSqlFiles;
+        protected string SqlFilesDirectoryPath;
 
         [SetUp]
         public void TestFixtureSetUp()
@@ -35,8 +35,8 @@ namespace DatabaseBuilder.Tests
             _LoadDbProviderAndConnectionString();
 
             _assemblyLocation = _GetAssemblyLocation();
-            FolderWithSqlFiles = $"{_assemblyLocation}\\TestDatabase\\{_dbProviderName}";
-            var changeScriptsFolder = $"{FolderWithSqlFiles}\\ChangeScripts";
+            SqlFilesDirectoryPath = $"{_assemblyLocation}\\TestDatabase\\{_dbProviderName}";
+            var changeScriptsFolder = $"{SqlFilesDirectoryPath}\\ChangeScripts";
             _newChangeScriptName = $"{changeScriptsFolder}\\1.0.0.10.sql";
 
             DeleteNewChangeScriptIfExits();

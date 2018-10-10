@@ -6,50 +6,50 @@ using System.Text.RegularExpressions;
 
 namespace DatabaseBuilder
 {
-    public class DatabaseBuilder
+    public class BuilderOfDatabase
     {
-        private readonly Func<IDbConnection> _getConnectionFunc;
+        private readonly Func<IDbConnection> _createConnectionFunc;
         private readonly string _versionTableName;
-        private readonly string _changeScriptsFolderName;
-        private readonly string _otherScriptsFolderName;
+        private readonly string _changeScriptsDirectoryName;
+        private readonly string _reRunnableScriptsDirectoryName;
         private readonly string _sqlScriptFileExtension;
         private readonly string _sqlScriptFileSearchPattern;
 
-        public DatabaseBuilder(
-            Func<IDbConnection> getConnectionFunc,
+        public BuilderOfDatabase(
+            Func<IDbConnection> createConnectionFunc,
             string versionTableName = "Version", 
-            string changeScriptsFolderName = "ChangeScripts",
-            string otherScriptsFolderName = "OtherScripts",
+            string changeScriptsDirectoryName = "ChangeScripts",
+            string reRunnableScriptsDirectoryName = "ReRunnableScripts",
             string sqlScriptFileExtension = ".sql"
             )
         {
-            _getConnectionFunc = getConnectionFunc;
+            _createConnectionFunc = createConnectionFunc;
             _versionTableName = versionTableName;
-            _changeScriptsFolderName = changeScriptsFolderName;
-            _otherScriptsFolderName = otherScriptsFolderName;
+            _changeScriptsDirectoryName = changeScriptsDirectoryName;
+            _reRunnableScriptsDirectoryName = reRunnableScriptsDirectoryName;
             _sqlScriptFileExtension = sqlScriptFileExtension;
             _sqlScriptFileSearchPattern = $"*{_sqlScriptFileExtension}";
         }
 
-        public void UpgradeDatabase(string folderWithSqlFiles)
+        public void BuildDatabase(string scriptsDirectoryPath)
         {
             var currentDatabaseVersion = _GetDatabaseVersion();
 
             _ExecuteWithinTransaction((connection, transaction) =>
             {
-                _ApplyChangeScripts(currentDatabaseVersion, Path.Combine(folderWithSqlFiles, _changeScriptsFolderName), connection, transaction);
-                _ApplyOtherScripts(Path.Combine(folderWithSqlFiles, _otherScriptsFolderName), connection, transaction);
+                _ApplyChangeScripts(currentDatabaseVersion, Path.Combine(scriptsDirectoryPath, _changeScriptsDirectoryName), connection, transaction);
+                _ApplyReRunnableScripts(Path.Combine(scriptsDirectoryPath, _reRunnableScriptsDirectoryName), connection, transaction);
             });
         }
 
         private void _ApplyChangeScripts(
             DatabaseVersion currentDatabaseVersion, 
-            string folderWithSqlFiles,
+            string scriptsDirectoryPath,
             IDbConnection dbConnection, 
             IDbTransaction transaction
             )
         {
-            var changeScriptSqlFiles = Directory.GetFiles(folderWithSqlFiles, _sqlScriptFileSearchPattern);
+            var changeScriptSqlFiles = Directory.GetFiles(scriptsDirectoryPath, _sqlScriptFileSearchPattern);
             var orderedChangeScriptSqlFiles = changeScriptSqlFiles
                 .OrderBy(changeScriptFileFullName =>
                 {
@@ -84,7 +84,7 @@ namespace DatabaseBuilder
 
         private void _ExecuteWithinTransaction(Action<IDbConnection, IDbTransaction> actionToExecute)
         {
-            using (var connection = _getConnectionFunc())
+            using (var connection = _createConnectionFunc())
             {
                 connection.Open();
                 using (var tx = connection.BeginTransaction())
@@ -161,9 +161,9 @@ namespace DatabaseBuilder
             }
         }
 
-        private void _ApplyOtherScripts(string folderWithSqlFiles, IDbConnection dbConnection, IDbTransaction transaction)
+        private void _ApplyReRunnableScripts(string scriptsDirectoryPath, IDbConnection dbConnection, IDbTransaction transaction)
         {
-            var sqlScriptFilesOrderedByName = Directory.GetFiles(folderWithSqlFiles, _sqlScriptFileSearchPattern)
+            var sqlScriptFilesOrderedByName = Directory.GetFiles(scriptsDirectoryPath, _sqlScriptFileSearchPattern)
                 .OrderBy(x => x)
                 .ToList();
 
@@ -172,13 +172,13 @@ namespace DatabaseBuilder
                 _ApplyOneSqlScript(sqlScriptFile, dbConnection, transaction);
             }
 
-            var foldersOrderedByName = Directory.GetDirectories(folderWithSqlFiles)
+            var directoriesOrderedByName = Directory.GetDirectories(scriptsDirectoryPath)
                 .OrderBy(x => x)
                 .ToList();
 
-            foreach (var folder in foldersOrderedByName)
+            foreach (var directory in directoriesOrderedByName)
             {
-                _ApplyOtherScripts(folder, dbConnection, transaction);
+                _ApplyReRunnableScripts(directory, dbConnection, transaction);
             }
         }
 
