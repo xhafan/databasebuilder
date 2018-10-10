@@ -185,7 +185,7 @@ namespace DatabaseBuilder
         private void _ApplyOneSqlScript(string sqlScriptFile, IDbConnection dbConnection, IDbTransaction transaction)
         {
             var sqlScript = File.ReadAllText(sqlScriptFile);
-            var sqlBatches = Regex.Split(sqlScript, @"^\s*GO\s*$", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+            var sqlBatches = Regex.Split(sqlScript, @"^\s*GO\s*$", RegexOptions.Multiline | RegexOptions.IgnoreCase).Where(x => !string.IsNullOrWhiteSpace(x));
 
             foreach (var sqlBatch in sqlBatches)
             {

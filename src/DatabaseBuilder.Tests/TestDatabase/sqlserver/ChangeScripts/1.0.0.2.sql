@@ -5,3 +5,4 @@ create table DataTable (
 )
 
 insert into DataTable (Id, [Text]) VALUES (1, 'some text')
+go
