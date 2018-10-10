@@ -2,10 +2,10 @@
 
   <PropertyGroup>
     <TargetFrameworks>net40;netstandard2.0</TargetFrameworks>
-    <Version>1.0.6</Version>
+    <Version>1.0.7</Version>
     <AssemblyVersion>$(Version).0</AssemblyVersion>
     <FileVersion>$(Version).0</FileVersion>
-    <Description>Helper library to upgrade a versioned database from sql script files in a folder structure</Description>
+    <Description>Helper library to build a versioned database from sql script files in a directory structure</Description>
     <PackageTags>Database builder sql</PackageTags>
     <Authors>Martin Havlišta</Authors>
     <Company></Company>
