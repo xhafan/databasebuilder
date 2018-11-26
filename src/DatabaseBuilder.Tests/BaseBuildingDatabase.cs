@@ -97,11 +97,27 @@ update ""DataTable"" SET Text2 = 'some other text' where id = 1
             }
         }
 
-        protected DatabaseVersion GetCurrentDatabaseVersion()
+        protected string GetCurrentDatabaseVersion()
         {
-            return ExecuteSqlQuery<DatabaseVersion>("select * from \"Version\"").Single();
-        }
+            using (var connection = GetDbConnection())
+            {
+                connection.Open();
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = $"select Major, Minor, Revision, ScriptNumber from \"Version\"";
 
+                    using (var reader = command.ExecuteReader())
+                    {
+                        if (!reader.Read()) throw new Exception("Cannot read database version");
+                        var major = reader.GetInt32(0);
+                        var minor = reader.GetInt32(1);
+                        var revision = reader.GetInt32(2);
+                        var scriptNumber = reader.GetInt32(3);
+                        return $"{major}.{minor}.{revision}.{scriptNumber}";
+                    }
+                }
+            }
+        }
 
         protected IDbConnection GetDbConnection()
         {

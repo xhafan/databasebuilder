@@ -25,7 +25,7 @@ namespace DatabaseBuilder.Tests
         public void database_version_is_upgraded()
         {
             var currentDatabaseVersion = GetCurrentDatabaseVersion();
-            currentDatabaseVersion.ToString().ShouldBe("1.0.0.10");
+            currentDatabaseVersion.ShouldBe("1.0.0.10");
         }
 
         [Test]
