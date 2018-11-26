@@ -6,6 +6,9 @@ using System.Text.RegularExpressions;
 
 namespace DatabaseBuilder
 {
+    /// <summary>
+    /// Builds a versioned database from SQL script files in a directory structure.
+    /// </summary>
     public class BuilderOfDatabase
     {
         private readonly Func<IDbConnection> _createConnectionFunc;
@@ -15,6 +18,14 @@ namespace DatabaseBuilder
         private readonly string _sqlScriptFileExtension;
         private readonly string _sqlScriptFileSearchPattern;
 
+        /// <summary>
+        /// Initializes the instance.
+        /// </summary>
+        /// <param name="createConnectionFunc">A function to create a new database connection</param>
+        /// <param name="versionTableName">A default table name for a table with the version info</param>
+        /// <param name="changeScriptsDirectoryName">A name of the directory with change scripts</param>
+        /// <param name="reRunnableScriptsDirectoryName">A name of the directory with re-runnable scripts</param>
+        /// <param name="sqlScriptFileExtension">SQL script file extension</param>
         public BuilderOfDatabase(
             Func<IDbConnection> createConnectionFunc,
             string versionTableName = "Version", 
@@ -31,6 +42,10 @@ namespace DatabaseBuilder
             _sqlScriptFileSearchPattern = $"*{_sqlScriptFileExtension}";
         }
 
+        /// <summary>
+        /// Builds the database.
+        /// </summary>
+        /// <param name="scriptsDirectoryPath">A path to a directory with the SQL scripts</param>
         public void BuildDatabase(string scriptsDirectoryPath)
         {
             var currentDatabaseVersion = _GetDatabaseVersion();
@@ -106,7 +121,7 @@ namespace DatabaseBuilder
 
         private DatabaseVersion _GetDatabaseVersion()
         {
-            DatabaseVersion databaseVersion = new DatabaseVersion(0, 0, 0, 0);
+            var databaseVersion = new DatabaseVersion(0, 0, 0, 0);
 
             _ExecuteWithinTransaction((connection, transaction) =>
             {
@@ -119,7 +134,10 @@ namespace DatabaseBuilder
                     {
                         using (var reader = command.ExecuteReader())
                         {
-                            if (!reader.Read()) throw new CannotReadDatabaseVersionException();
+                            if (!reader.Read())
+                            {
+                                throw new CannotReadDatabaseVersionException($"The version table ({_versionTableName}) exists but the row with the version info is missing?");
+                            }
                             var major = reader.GetInt32(0);
                             var minor = reader.GetInt32(1);
                             var revision = reader.GetInt32(2);

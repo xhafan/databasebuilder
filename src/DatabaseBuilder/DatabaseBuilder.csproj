@@ -17,6 +17,7 @@ Documentation: https://github.com/xhafan/databasebuilder/wiki</Description>
     <PackageReleaseNotes>Strong-named DatabaseBuilder assembly</PackageReleaseNotes>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\DatabaseBuilder.snk</AssemblyOriginatorKeyFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

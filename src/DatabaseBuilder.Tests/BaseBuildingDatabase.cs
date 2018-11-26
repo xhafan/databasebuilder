@@ -10,11 +10,11 @@ using Dapper;
 using Npgsql;
 using NUnit.Framework;
 
-#if !NETCOREAPP2_0
+#if !NETCOREAPP
 using System.Configuration;
 #endif  
 
-#if NETCOREAPP2_0
+#if NETCOREAPP
 using Microsoft.Extensions.Configuration;
 #endif
 
@@ -44,7 +44,7 @@ namespace DatabaseBuilder.Tests
 
         private void _LoadDbProviderAndConnectionString()
         {
-#if NETCOREAPP2_0
+#if NETCOREAPP
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json");
