@@ -3,7 +3,7 @@
 namespace DatabaseBuilder
 {
     /// <summary>
-    /// The exception thrown when cannot read the database table version when the version table exists.
+    /// The exception thrown when cannot read the database version; usually due to missing row with the version info in the version table.
     /// </summary>
     public class CannotReadDatabaseVersionException : Exception
     {
