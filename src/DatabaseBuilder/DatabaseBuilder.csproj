@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net40;netstandard2.0</TargetFrameworks>
-    <Version>1.0.10</Version>
+    <TargetFrameworks>net40;net461;netstandard2.0</TargetFrameworks>
+    <Version>1.0.11</Version>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>$(Version).0</FileVersion>
     <Description>Build a versioned database from sql script files in a directory structure.
@@ -14,7 +14,7 @@ Documentation: https://github.com/xhafan/databasebuilder/wiki</Description>
     <Product />
     <PackageProjectUrl>https://github.com/xhafan/databasebuilder</PackageProjectUrl>
     <PackageLicenseUrl>https://raw.githubusercontent.com/xhafan/databasebuilder/master/LICENSE</PackageLicenseUrl>
-    <PackageReleaseNotes>Strong-named DatabaseBuilder assembly</PackageReleaseNotes>
+    <PackageReleaseNotes>Added XML documentation into the code.</PackageReleaseNotes>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\DatabaseBuilder.snk</AssemblyOriginatorKeyFile>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
