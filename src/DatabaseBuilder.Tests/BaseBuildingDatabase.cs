@@ -66,9 +66,9 @@ namespace DatabaseBuilder.Tests
         protected void CreateNewChangeScript()
         {
             File.WriteAllText(_newChangeScriptName, @"
-alter table ""DataTable"" add Text2 Text null;
+alter table ""DataTable"" add ""Text2"" Text null;
 go
-update ""DataTable"" SET Text2 = 'some other text' where id = 1
+update ""DataTable"" SET ""Text2"" = 'some other text' where ""Id"" = 1
 ");
         }
 
@@ -104,7 +104,7 @@ update ""DataTable"" SET Text2 = 'some other text' where id = 1
                 connection.Open();
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = $"select Major, Minor, Revision, ScriptNumber from \"Version\"";
+                    command.CommandText = $"select \"Major\", \"Minor\", \"Revision\", \"ScriptNumber\" from \"Version\"";
 
                     using (var reader = command.ExecuteReader())
                     {

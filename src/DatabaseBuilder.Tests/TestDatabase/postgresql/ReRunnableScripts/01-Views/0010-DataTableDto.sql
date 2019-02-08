@@ -3,6 +3,6 @@ drop view if exists "DataTableDto";
 create view "DataTableDto"
 as
 select 
-    Id
-    , Text
+    "Id"
+    , "Text"
 from "DataTable"

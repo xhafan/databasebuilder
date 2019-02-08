@@ -27,7 +27,7 @@ namespace DatabaseBuilder.Tests
         [Test]
         public void database_view_was_created()
         {
-            var text = ExecuteSqlQuery<string>("select Text from \"DataTableDto\" where Id = 1").Single();
+            var text = ExecuteSqlQuery<string>("select \"Text\" from \"DataTableDto\" where \"Id\" = 1").Single();
             text.ShouldBe("some text");
         }
     }

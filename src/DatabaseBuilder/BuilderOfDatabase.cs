@@ -127,7 +127,7 @@ namespace DatabaseBuilder
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = $"select Major, Minor, Revision, ScriptNumber from \"{_versionTableName}\"";
+                    command.CommandText = $"select \"Major\", \"Minor\", \"Revision\", \"ScriptNumber\" from \"{_versionTableName}\"";
                     command.Transaction = transaction;
 
                     try
@@ -165,10 +165,10 @@ namespace DatabaseBuilder
                 using (var command = dbConnection.CreateCommand())
                 {
                     command.CommandText = $"update \"{_versionTableName}\" set " +
-                                          $"    Major = {databaseVersionOfLastChangeScript.Major}, " +
-                                          $"    Minor = {databaseVersionOfLastChangeScript.Minor}, " +
-                                          $"    Revision = {databaseVersionOfLastChangeScript.Revision}, " +
-                                          $"    ScriptNumber = {databaseVersionOfLastChangeScript.ScriptNumber}";
+                                          $"    \"Major\" = {databaseVersionOfLastChangeScript.Major}, " +
+                                          $"    \"Minor\" = {databaseVersionOfLastChangeScript.Minor}, " +
+                                          $"    \"Revision\" = {databaseVersionOfLastChangeScript.Revision}, " +
+                                          $"    \"ScriptNumber\" = {databaseVersionOfLastChangeScript.ScriptNumber}";
                     command.Transaction = transaction;
                     command.ExecuteNonQuery();    
                 }

@@ -31,7 +31,7 @@ namespace DatabaseBuilder.Tests
         [Test]
         public void new_change_script_is_applied()
         {
-            var text = ExecuteSqlQuery<string>("select Text2 from \"DataTable\" where Id = 1").Single();
+            var text = ExecuteSqlQuery<string>("select \"Text2\" from \"DataTable\" where \"Id\" = 1").Single();
             text.ShouldBe("some other text");
         }
     }
