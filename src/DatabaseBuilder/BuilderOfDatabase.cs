@@ -53,7 +53,10 @@ namespace DatabaseBuilder
             _ExecuteWithinTransaction((connection, transaction) =>
             {
                 _ApplyChangeScripts(currentDatabaseVersion, Path.Combine(scriptsDirectoryPath, _changeScriptsDirectoryName), connection, transaction);
-                _ApplyReRunnableScripts(Path.Combine(scriptsDirectoryPath, _reRunnableScriptsDirectoryName), connection, transaction);
+
+                var reRunnableScriptsDirectoryPath = Path.Combine(scriptsDirectoryPath, _reRunnableScriptsDirectoryName);
+                if (!Directory.Exists(reRunnableScriptsDirectoryPath)) return;
+                _ApplyReRunnableScripts(reRunnableScriptsDirectoryPath, connection, transaction);
             });
         }
 
