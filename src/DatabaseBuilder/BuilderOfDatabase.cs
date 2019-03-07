@@ -3,6 +3,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace DatabaseBuilder
 {
@@ -49,7 +50,7 @@ namespace DatabaseBuilder
         public void BuildDatabase(string scriptsDirectoryPath)
         {
             var currentDatabaseVersion = _GetDatabaseVersion();
-
+            Thread.Sleep(2000);
             _ExecuteWithinTransaction((connection, transaction) =>
             {
                 _ApplyChangeScripts(currentDatabaseVersion, Path.Combine(scriptsDirectoryPath, _changeScriptsDirectoryName), connection, transaction);
@@ -90,7 +91,12 @@ namespace DatabaseBuilder
                 _ApplyOneSqlScript(changeScriptSqlFile, dbConnection, transaction);
             }
 
-            _UpdateDatabaseVersion(dbConnection, transaction, changeScriptSqlFilesGreaterThanCurrentDatabaseVersion.Last());
+            _UpdateDatabaseVersion(
+                dbConnection, 
+                transaction, 
+                changeScriptSqlFilesGreaterThanCurrentDatabaseVersion.Last(),
+                currentDatabaseVersion
+                );
         }
 
         private string _GetChangeScriptVersionFromFullFileName(string changeScriptFileFullName)
@@ -158,7 +164,12 @@ namespace DatabaseBuilder
             return databaseVersion;
         }
 
-        private void _UpdateDatabaseVersion(IDbConnection dbConnection, IDbTransaction transaction, string lastChangeScriptSqlFile)
+        private void _UpdateDatabaseVersion(
+            IDbConnection dbConnection, 
+            IDbTransaction transaction, 
+            string lastChangeScriptSqlFile,
+            DatabaseVersion currentDatabaseVersion
+            )
         {
             var lastChangeScriptVersion = _GetChangeScriptVersionFromFullFileName(lastChangeScriptSqlFile);
             var databaseVersionOfLastChangeScript = new DatabaseVersion(lastChangeScriptVersion);
@@ -171,9 +182,18 @@ namespace DatabaseBuilder
                                           $"    \"Major\" = {databaseVersionOfLastChangeScript.Major}, " +
                                           $"    \"Minor\" = {databaseVersionOfLastChangeScript.Minor}, " +
                                           $"    \"Revision\" = {databaseVersionOfLastChangeScript.Revision}, " +
-                                          $"    \"ScriptNumber\" = {databaseVersionOfLastChangeScript.ScriptNumber}";
+                                          $"    \"ScriptNumber\" = {databaseVersionOfLastChangeScript.ScriptNumber} " +
+                                          $"where \"Major\" = {currentDatabaseVersion.Major} " +
+                                          $"and \"Minor\" = {currentDatabaseVersion.Minor} " +
+                                          $"and \"Revision\" = {currentDatabaseVersion.Revision} " +
+                                          $"and \"ScriptNumber\" = {currentDatabaseVersion.ScriptNumber} "
+                        ;
                     command.Transaction = transaction;
-                    command.ExecuteNonQuery();    
+                    var numberOfRowsAffected = command.ExecuteNonQuery();
+                    if (numberOfRowsAffected != 1)
+                    {
+                        throw new Exception("Cannot update the database version.");
+                    }
                 }
             }
             catch (Exception ex)
