@@ -3,7 +3,6 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading;
 
 namespace DatabaseBuilder
 {
@@ -50,7 +49,6 @@ namespace DatabaseBuilder
         public void BuildDatabase(string scriptsDirectoryPath)
         {
             var currentDatabaseVersion = _GetDatabaseVersion();
-            Thread.Sleep(2000);
             _ExecuteWithinTransaction((connection, transaction) =>
             {
                 _ApplyChangeScripts(currentDatabaseVersion, Path.Combine(scriptsDirectoryPath, _changeScriptsDirectoryName), connection, transaction);
@@ -192,7 +190,7 @@ namespace DatabaseBuilder
                     var numberOfRowsAffected = command.ExecuteNonQuery();
                     if (numberOfRowsAffected != 1)
                     {
-                        throw new Exception("Cannot update the database version.");
+                        throw new Exception("Database version has been changed.");
                     }
                 }
             }
