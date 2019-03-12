@@ -198,7 +198,9 @@ namespace DatabaseBuilder
                     var numberOfRowsAffected = command.ExecuteNonQuery();
                     if (numberOfRowsAffected != 1)
                     {
-                        throw new Exception("Database version has been changed.");
+                        throw new Exception(
+                            "Database version has been changed (by another process concurrently?). " +
+                            "Please make sure the first change script creating the version table updates the database version to 0.0.0.0.");
                     }
                 }
             }
