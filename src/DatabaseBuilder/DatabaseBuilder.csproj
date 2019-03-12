@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFrameworks>net40;net461;netstandard2.0</TargetFrameworks>
-    <Version>1.1.0</Version>
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <Version>1.2.0</Version>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
     <FileVersion>$(Version).0</FileVersion>
     <Description>Build a versioned database from sql script files in a directory structure.
 
@@ -15,8 +15,9 @@ Documentation: https://github.com/xhafan/databasebuilder/wiki</Description>
     <PackageProjectUrl>https://github.com/xhafan/databasebuilder</PackageProjectUrl>
     <PackageLicenseUrl>https://raw.githubusercontent.com/xhafan/databasebuilder/master/LICENSE</PackageLicenseUrl>
     <PackageReleaseNotes>Fixed two issues:  
-#1 Postgresql - column names in the "Version" table are lower case  
-#2 Make "ReRunnableScripts" directory optional</PackageReleaseNotes>
+#3 Allow multiple instances to update the database concurrently (breaking change - the first change script needs to update the
+database version to 0.0.0.0 (previously it could be anything, e.g. 1.0.0.0)
+#4 Add console logging</PackageReleaseNotes>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\DatabaseBuilder.snk</AssemblyOriginatorKeyFile>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
