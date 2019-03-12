@@ -49,6 +49,7 @@ namespace DatabaseBuilder
         public void BuildDatabase(string scriptsDirectoryPath)
         {
             var currentDatabaseVersion = _GetDatabaseVersion();
+            Console.WriteLine($"Current database version: {currentDatabaseVersion}");
 
             _ExecuteWithinTransaction((connection, transaction) =>
             {
@@ -84,6 +85,12 @@ namespace DatabaseBuilder
                 }).ToList();
 
             if (!changeScriptSqlFilesGreaterThanCurrentDatabaseVersion.Any()) return;
+
+            Console.WriteLine("Change scripts applied:");
+            foreach (var changeScript in changeScriptSqlFilesGreaterThanCurrentDatabaseVersion)
+            {
+                Console.WriteLine(_GetChangeScriptVersionFromFullFileName(changeScript));
+            }
 
             foreach (var changeScriptSqlFile in changeScriptSqlFilesGreaterThanCurrentDatabaseVersion)
             {
@@ -199,6 +206,8 @@ namespace DatabaseBuilder
             {
                 throw new Exception($"Cannot update database version in table {_versionTableName}", ex);
             }
+
+            Console.WriteLine($"Database version updated to {lastChangeScriptVersion}");
         }
 
         private void _ApplyReRunnableScripts(string scriptsDirectoryPath, IDbConnection dbConnection, IDbTransaction transaction)
