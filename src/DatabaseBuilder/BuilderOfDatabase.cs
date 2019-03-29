@@ -17,17 +17,20 @@ namespace DatabaseBuilder
         private readonly string _reRunnableScriptsDirectoryName;
         private readonly string _sqlScriptFileExtension;
         private readonly string _sqlScriptFileSearchPattern;
+        private readonly Action<string> _logAction;
 
         /// <summary>
         /// Initializes the instance.
         /// </summary>
         /// <param name="createConnectionFunc">A function to create a new database connection</param>
+        /// <param name="logAction">A log action. If not set it logs to a console.</param>
         /// <param name="versionTableName">A default table name for a table with the version info</param>
         /// <param name="changeScriptsDirectoryName">A name of the directory with change scripts</param>
         /// <param name="reRunnableScriptsDirectoryName">A name of the directory with re-runnable scripts</param>
         /// <param name="sqlScriptFileExtension">SQL script file extension</param>
         public BuilderOfDatabase(
             Func<IDbConnection> createConnectionFunc,
+            Action<string> logAction = null,
             string versionTableName = "Version", 
             string changeScriptsDirectoryName = "ChangeScripts",
             string reRunnableScriptsDirectoryName = "ReRunnableScripts",
@@ -35,6 +38,7 @@ namespace DatabaseBuilder
             )
         {
             _createConnectionFunc = createConnectionFunc;
+            _logAction = logAction ?? Console.WriteLine;
             _versionTableName = versionTableName;
             _changeScriptsDirectoryName = changeScriptsDirectoryName;
             _reRunnableScriptsDirectoryName = reRunnableScriptsDirectoryName;
@@ -49,7 +53,7 @@ namespace DatabaseBuilder
         public void BuildDatabase(string scriptsDirectoryPath)
         {
             var currentDatabaseVersion = _GetDatabaseVersion();
-            Console.WriteLine($"Current database version: {currentDatabaseVersion}");
+            _logAction($"Current database version: {currentDatabaseVersion}");
 
             _ExecuteWithinTransaction((connection, transaction) =>
             {
@@ -86,10 +90,10 @@ namespace DatabaseBuilder
 
             if (!changeScriptSqlFilesGreaterThanCurrentDatabaseVersion.Any()) return;
 
-            Console.WriteLine("Change scripts applied:");
+            _logAction("Change scripts applied:");
             foreach (var changeScript in changeScriptSqlFilesGreaterThanCurrentDatabaseVersion)
             {
-                Console.WriteLine(_GetChangeScriptVersionFromFullFileName(changeScript));
+                _logAction(_GetChangeScriptVersionFromFullFileName(changeScript));
             }
 
             foreach (var changeScriptSqlFile in changeScriptSqlFilesGreaterThanCurrentDatabaseVersion)
@@ -127,7 +131,7 @@ namespace DatabaseBuilder
                     }
                     catch
                     {
-                        try { tx.Rollback(); } catch {}
+                        try { tx.Rollback(); } catch { /* ignored */ }
                         throw;
                     }
                 }
@@ -164,7 +168,7 @@ namespace DatabaseBuilder
                     {
                         throw;
                     }
-                    catch {}
+                    catch { /* ignored */ }
                 }
             });
             return databaseVersion;
@@ -209,7 +213,7 @@ namespace DatabaseBuilder
                 throw new Exception($"Cannot update database version in table {_versionTableName}", ex);
             }
 
-            Console.WriteLine($"Database version updated to {lastChangeScriptVersion}");
+            _logAction($"Database version updated to {lastChangeScriptVersion}");
         }
 
         private void _ApplyReRunnableScripts(string scriptsDirectoryPath, IDbConnection dbConnection, IDbTransaction transaction)
