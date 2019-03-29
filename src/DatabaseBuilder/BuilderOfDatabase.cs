@@ -23,18 +23,18 @@ namespace DatabaseBuilder
         /// Initializes the instance.
         /// </summary>
         /// <param name="createConnectionFunc">A function to create a new database connection</param>
-        /// <param name="logAction">A log action. If not set it logs to a console.</param>
         /// <param name="versionTableName">A default table name for a table with the version info</param>
         /// <param name="changeScriptsDirectoryName">A name of the directory with change scripts</param>
         /// <param name="reRunnableScriptsDirectoryName">A name of the directory with re-runnable scripts</param>
         /// <param name="sqlScriptFileExtension">SQL script file extension</param>
+        /// <param name="logAction">A log action. If not set it logs to a console.</param>
         public BuilderOfDatabase(
             Func<IDbConnection> createConnectionFunc,
-            Action<string> logAction = null,
             string versionTableName = "Version", 
             string changeScriptsDirectoryName = "ChangeScripts",
             string reRunnableScriptsDirectoryName = "ReRunnableScripts",
-            string sqlScriptFileExtension = ".sql"
+            string sqlScriptFileExtension = ".sql",
+            Action<string> logAction = null
             )
         {
             _createConnectionFunc = createConnectionFunc;

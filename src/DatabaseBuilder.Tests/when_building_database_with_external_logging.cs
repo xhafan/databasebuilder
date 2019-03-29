@@ -16,7 +16,7 @@ namespace DatabaseBuilder.Tests
             _loggedMessages = new List<string>();
             Action<string> logAction = loggedMessage => _loggedMessages.Add(loggedMessage);
 
-            var builderOfDatabase = new BuilderOfDatabase(GetDbConnection, logAction);
+            var builderOfDatabase = new BuilderOfDatabase(GetDbConnection, logAction: logAction);
 
             DropDatabaseObjectsToMakeDatabaseEmpty();
 
