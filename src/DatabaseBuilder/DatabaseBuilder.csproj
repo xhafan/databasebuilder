@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net40;net461;netstandard2.0</TargetFrameworks>
-    <Version>1.2.1</Version>
+    <Version>1.2.2</Version>
     <AssemblyVersion>1.2.0.0</AssemblyVersion>
     <FileVersion>$(Version).0</FileVersion>
     <Description>Build a versioned database from sql script files in a directory structure.
@@ -14,7 +14,8 @@ Documentation: https://github.com/xhafan/databasebuilder/wiki</Description>
     <Product />
     <PackageProjectUrl>https://github.com/xhafan/databasebuilder</PackageProjectUrl>
     <PackageLicenseUrl>https://raw.githubusercontent.com/xhafan/databasebuilder/master/LICENSE</PackageLicenseUrl>
-    <PackageReleaseNotes>Small improvement regarding #3 Allow multiple instances to update the database concurrently - improved the error message when the database version cannot be updated</PackageReleaseNotes>
+    <PackageReleaseNotes>New feature:  
+#5 Support external logging library logging</PackageReleaseNotes>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\DatabaseBuilder.snk</AssemblyOriginatorKeyFile>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
