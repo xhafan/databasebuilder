@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 	
-	<Version>1.2.2</Version>
+	<Version>1.2.3</Version>
     <AssemblyVersion>1.2.0.0</AssemblyVersion>
     <FileVersion>$(Version).0</FileVersion>
     <Description>Build a versioned database from sql script files in a directory structure.
@@ -19,8 +19,9 @@ Documentation: https://github.com/xhafan/databasebuilder/wiki</Description>
     <Product />
     <PackageProjectUrl>https://github.com/xhafan/databasebuilder</PackageProjectUrl>
     <PackageLicenseUrl>https://raw.githubusercontent.com/xhafan/databasebuilder/master/LICENSE</PackageLicenseUrl>
-    <PackageReleaseNotes>New feature:  
-#5 Support external logging library logging</PackageReleaseNotes>
+    <PackageReleaseNotes>Bug fix:  
+#6 Multiple database builders applying change scripts on the same database at the same time results in a deadlock - the first database builder updates the database version table first, so other database builders have to wait
+    </PackageReleaseNotes>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\DatabaseBuilder.snk</AssemblyOriginatorKeyFile>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
