@@ -20,7 +20,6 @@ Documentation: https://github.com/xhafan/databasebuilder/wiki</Description>
     <PackageProjectUrl>https://github.com/xhafan/databasebuilder</PackageProjectUrl>
 	<PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <IncludeContentInPack>true</IncludeContentInPack>
     <PackageReleaseNotes>Bug fix:  
 #6 Multiple database builders applying change scripts on the same database at the same time results in a deadlock - the first database builder updates the database version table first, so other database builders have to wait
     </PackageReleaseNotes>
