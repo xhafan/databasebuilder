@@ -34,7 +34,7 @@ namespace DatabaseBuilder
             string changeScriptsDirectoryName = "ChangeScripts",
             string reRunnableScriptsDirectoryName = "ReRunnableScripts",
             string sqlScriptFileExtension = ".sql",
-            Action<string> logAction = null
+            Action<string>? logAction = null
             )
         {
             _createConnectionFunc = createConnectionFunc;
@@ -52,8 +52,8 @@ namespace DatabaseBuilder
         /// <param name="scriptsDirectoryPath">A path to a directory with the SQL scripts</param>
         public void BuildDatabase(string scriptsDirectoryPath)
         {
-            var currentDatabaseVersion = _GetDatabaseVersion();
-            _logAction($"Current database version: {currentDatabaseVersion}");
+            var currentDatabaseVersion = _GetDatabaseVersionInNewTransaction();
+            _logAction($"Current database version: {currentDatabaseVersion?.ToString() ?? "none"}");
 
             _ExecuteWithinTransaction((connection, transaction) =>
             {
@@ -66,7 +66,7 @@ namespace DatabaseBuilder
         }
 
         private void _ApplyChangeScripts(
-            DatabaseVersion currentDatabaseVersion, 
+            DatabaseVersion? currentDatabaseVersion, 
             string scriptsDirectoryPath,
             IDbConnection dbConnection, 
             IDbTransaction transaction
@@ -85,28 +85,31 @@ namespace DatabaseBuilder
                 changeScriptFileFullName =>
                 {
                     var version = _GetChangeScriptVersionFromFullFileName(changeScriptFileFullName);
-                    return new DatabaseVersion(version).CompareTo(currentDatabaseVersion) > 0;
+                    return currentDatabaseVersion == null || new DatabaseVersion(version).CompareTo(currentDatabaseVersion) > 0;
                 }).ToList();
 
             if (!changeScriptSqlFilesGreaterThanCurrentDatabaseVersion.Any()) return;
 
             _logAction("Change scripts applied:");
-            foreach (var changeScript in changeScriptSqlFilesGreaterThanCurrentDatabaseVersion)
-            {
-                _logAction(_GetChangeScriptVersionFromFullFileName(changeScript));
-            }
-
             foreach (var changeScriptSqlFile in changeScriptSqlFilesGreaterThanCurrentDatabaseVersion)
             {
+                if (currentDatabaseVersion != null)
+                {
+                    currentDatabaseVersion = _UpdateDatabaseVersion(
+                        dbConnection,
+                        transaction,
+                        changeScriptSqlFile,
+                        currentDatabaseVersion
+                    );
+                }
+
+                _logAction(_GetChangeScriptVersionFromFullFileName(changeScriptSqlFile));
                 _ApplyOneSqlScript(changeScriptSqlFile, dbConnection, transaction);
+
+                currentDatabaseVersion ??= _GetDatabaseVersion(dbConnection, transaction);
             }
 
-            _UpdateDatabaseVersion(
-                dbConnection, 
-                transaction, 
-                changeScriptSqlFilesGreaterThanCurrentDatabaseVersion.Last(),
-                currentDatabaseVersion
-                );
+            _logAction($"Database version updated to {currentDatabaseVersion}");
         }
 
         private string _GetChangeScriptVersionFromFullFileName(string changeScriptFileFullName)
@@ -138,61 +141,68 @@ namespace DatabaseBuilder
             }
         }
 
-        private DatabaseVersion _GetDatabaseVersion()
+        private DatabaseVersion? _GetDatabaseVersionInNewTransaction()
         {
-            var databaseVersion = new DatabaseVersion(0, 0, 0, 0);
+            DatabaseVersion? databaseVersion = null;
 
             _ExecuteWithinTransaction((connection, transaction) =>
             {
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = $"select \"Major\", \"Minor\", \"Revision\", \"ScriptNumber\" from \"{_versionTableName}\"";
-                    command.Transaction = transaction;
-
-                    try
-                    {
-                        using (var reader = command.ExecuteReader())
-                        {
-                            if (!reader.Read())
-                            {
-                                throw new CannotReadDatabaseVersionException($"The version table ({_versionTableName}) exists but the row with the version info is missing?");
-                            }
-                            var major = reader.GetInt32(0);
-                            var minor = reader.GetInt32(1);
-                            var revision = reader.GetInt32(2);
-                            var scriptNumber = reader.GetInt32(3);
-                            databaseVersion = new DatabaseVersion(major, minor, revision, scriptNumber);
-                        }
-                    }
-                    catch (CannotReadDatabaseVersionException)
-                    {
-                        throw;
-                    }
-                    catch { /* ignored */ }
-                }
+                databaseVersion = _GetDatabaseVersion(connection, transaction);
             });
             return databaseVersion;
         }
 
-        private void _UpdateDatabaseVersion(
+        private DatabaseVersion? _GetDatabaseVersion(IDbConnection connection, IDbTransaction transaction)
+        {
+            DatabaseVersion? databaseVersion = null;
+
+            using var command = connection.CreateCommand();
+            command.CommandText = $"select \"Major\", \"Minor\", \"Revision\", \"ScriptNumber\" from \"{_versionTableName}\"";
+            command.Transaction = transaction;
+
+            try
+            {
+                using var reader = command.ExecuteReader();
+                if (!reader.Read())
+                {
+                    throw new CannotReadDatabaseVersionException(
+                        $"The version table ({_versionTableName}) exists but the row with the version info is missing?");
+                }
+
+                var major = reader.GetInt32(0);
+                var minor = reader.GetInt32(1);
+                var revision = reader.GetInt32(2);
+                var scriptNumber = reader.GetInt32(3);
+                databaseVersion = new DatabaseVersion(major, minor, revision, scriptNumber);
+            }
+            catch (CannotReadDatabaseVersionException)
+            {
+                throw;
+            }
+            catch { /* ignored */ }
+
+            return databaseVersion;
+        }
+        
+        private DatabaseVersion _UpdateDatabaseVersion(
             IDbConnection dbConnection, 
             IDbTransaction transaction, 
-            string lastChangeScriptSqlFile,
+            string changeScriptSqlFile,
             DatabaseVersion currentDatabaseVersion
             )
         {
-            var lastChangeScriptVersion = _GetChangeScriptVersionFromFullFileName(lastChangeScriptSqlFile);
-            var databaseVersionOfLastChangeScript = new DatabaseVersion(lastChangeScriptVersion);
+            var changeScriptVersion = _GetChangeScriptVersionFromFullFileName(changeScriptSqlFile);
+            var changeScriptDatabaseVersion = new DatabaseVersion(changeScriptVersion);
 
             try
             {
                 using (var command = dbConnection.CreateCommand())
                 {
                     command.CommandText = $"update \"{_versionTableName}\" set " +
-                                          $"    \"Major\" = {databaseVersionOfLastChangeScript.Major}, " +
-                                          $"    \"Minor\" = {databaseVersionOfLastChangeScript.Minor}, " +
-                                          $"    \"Revision\" = {databaseVersionOfLastChangeScript.Revision}, " +
-                                          $"    \"ScriptNumber\" = {databaseVersionOfLastChangeScript.ScriptNumber} " +
+                                          $"    \"Major\" = {changeScriptDatabaseVersion.Major}, " +
+                                          $"    \"Minor\" = {changeScriptDatabaseVersion.Minor}, " +
+                                          $"    \"Revision\" = {changeScriptDatabaseVersion.Revision}, " +
+                                          $"    \"ScriptNumber\" = {changeScriptDatabaseVersion.ScriptNumber} " +
                                           $"where \"Major\" = {currentDatabaseVersion.Major} " +
                                           $"and \"Minor\" = {currentDatabaseVersion.Minor} " +
                                           $"and \"Revision\" = {currentDatabaseVersion.Revision} " +
@@ -213,7 +223,7 @@ namespace DatabaseBuilder
                 throw new Exception($"Cannot update database version in table {_versionTableName}", ex);
             }
 
-            _logAction($"Database version updated to {lastChangeScriptVersion}");
+            return changeScriptDatabaseVersion;
         }
 
         private void _ApplyReRunnableScripts(string scriptsDirectoryPath, IDbConnection dbConnection, IDbTransaction transaction)

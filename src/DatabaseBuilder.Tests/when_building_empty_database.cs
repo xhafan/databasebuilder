@@ -21,14 +21,14 @@ namespace DatabaseBuilder.Tests
         public void database_version_is_upgraded()
         {
             var currentDatabaseVersion = GetCurrentDatabaseVersion();
-            currentDatabaseVersion.ShouldBe("1.0.0.2");
+            currentDatabaseVersion.ShouldBe("1.0.0.3");
         }
 
         [Test]
         public void database_view_was_created()
         {
             var text = ExecuteSqlQuery<string>("select \"Text\" from \"DataTableDto\" where \"Id\" = 1").Single();
-            text.ShouldBe("some text");
+            text.ShouldBe("some text 2");
         }
     }
 }

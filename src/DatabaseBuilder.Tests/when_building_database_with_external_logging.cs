@@ -28,11 +28,12 @@ namespace DatabaseBuilder.Tests
         {
             _loggedMessages.ShouldBe(new[]
             {
-                "Current database version: 0.0.0.0",
+                "Current database version: none",
                 "Change scripts applied:",
                 "1.0.0.1",
                 "1.0.0.2",
-                "Database version updated to 1.0.0.2"
+                "1.0.0.3",
+                "Database version updated to 1.0.0.3"
             });
         }
     }
