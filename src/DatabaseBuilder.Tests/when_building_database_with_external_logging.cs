@@ -28,7 +28,7 @@ namespace DatabaseBuilder.Tests
         {
             _loggedMessages.ShouldBe(new[]
             {
-                "Current database version: none",
+                "Attempt 1: Current database version: none",
                 "Change scripts applied:",
                 "1.0.0.1",
                 "1.0.0.2",

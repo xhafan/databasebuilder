@@ -52,17 +52,33 @@ namespace DatabaseBuilder
         /// <param name="scriptsDirectoryPath">A path to a directory with the SQL scripts</param>
         public void BuildDatabase(string scriptsDirectoryPath)
         {
-            var currentDatabaseVersion = _GetDatabaseVersionInNewTransaction();
-            _logAction($"Current database version: {currentDatabaseVersion?.ToString() ?? "none"}");
-
-            _ExecuteWithinTransaction((connection, transaction) =>
+            for (var attemptNumber = 1; attemptNumber <= 2; attemptNumber++)
             {
-                _ApplyChangeScripts(currentDatabaseVersion, Path.Combine(scriptsDirectoryPath, _changeScriptsDirectoryName), connection, transaction);
+                try
+                {
+                    var currentDatabaseVersion = _GetDatabaseVersionInNewTransaction();
+                    _logAction($"Attempt {attemptNumber}: Current database version: {currentDatabaseVersion?.ToString() ?? "none"}");
 
-                var reRunnableScriptsDirectoryPath = Path.Combine(scriptsDirectoryPath, _reRunnableScriptsDirectoryName);
-                if (!Directory.Exists(reRunnableScriptsDirectoryPath)) return;
-                _ApplyReRunnableScripts(reRunnableScriptsDirectoryPath, connection, transaction);
-            });
+                    _ExecuteWithinTransaction((connection, transaction) =>
+                    {
+                        _ApplyChangeScripts(currentDatabaseVersion, Path.Combine(scriptsDirectoryPath, _changeScriptsDirectoryName), connection, transaction);
+
+                        var reRunnableScriptsDirectoryPath = Path.Combine(scriptsDirectoryPath, _reRunnableScriptsDirectoryName);
+                        if (!Directory.Exists(reRunnableScriptsDirectoryPath)) return;
+                        _ApplyReRunnableScripts(reRunnableScriptsDirectoryPath, connection, transaction);
+                    });
+
+                    break;
+                }
+                catch (CannotUpdateVersionException e)
+                {
+                    _logAction(e.Message);
+                    if (attemptNumber == 2)
+                    {
+                        throw;
+                    }
+                }
+            }
         }
 
         private void _ApplyChangeScripts(
@@ -121,23 +137,19 @@ namespace DatabaseBuilder
 
         private void _ExecuteWithinTransaction(Action<IDbConnection, IDbTransaction> actionToExecute)
         {
-            using (var connection = _createConnectionFunc())
+            using var connection = _createConnectionFunc();
+            connection.Open();
+            using var tx = connection.BeginTransaction();
+            try
             {
-                connection.Open();
-                using (var tx = connection.BeginTransaction())
-                {
-                    try
-                    {
-                        actionToExecute(connection, tx);
+                actionToExecute(connection, tx);
 
-                        tx.Commit();
-                    }
-                    catch
-                    {
-                        try { tx.Rollback(); } catch { /* ignored */ }
-                        throw;
-                    }
-                }
+                tx.Commit();
+            }
+            catch
+            {
+                try { tx.Rollback(); } catch { /* ignored */ }
+                throw;
             }
         }
 
@@ -157,7 +169,9 @@ namespace DatabaseBuilder
             DatabaseVersion? databaseVersion = null;
 
             using var command = connection.CreateCommand();
-            command.CommandText = $"select \"Major\", \"Minor\", \"Revision\", \"ScriptNumber\" from \"{_versionTableName}\"";
+            command.CommandText = $"""
+                                   select "Major", "Minor", "Revision", "ScriptNumber" from "{_versionTableName}"
+                                   """;
             command.Transaction = transaction;
 
             try
@@ -196,27 +210,30 @@ namespace DatabaseBuilder
 
             try
             {
-                using (var command = dbConnection.CreateCommand())
+                using var command = dbConnection.CreateCommand();
+                command.CommandText = $"""
+                                       update "{_versionTableName}" set     
+                                           "Major" = {changeScriptDatabaseVersion.Major}
+                                           , "Minor" = {changeScriptDatabaseVersion.Minor}
+                                           , "Revision" = {changeScriptDatabaseVersion.Revision}
+                                           , "ScriptNumber" = {changeScriptDatabaseVersion.ScriptNumber} 
+                                       where "Major" = {currentDatabaseVersion.Major} 
+                                       and "Minor" = {currentDatabaseVersion.Minor} 
+                                       and "Revision" = {currentDatabaseVersion.Revision} 
+                                       and "ScriptNumber" = {currentDatabaseVersion.ScriptNumber} 
+                                       """
+                    ;
+                command.Transaction = transaction;
+                var numberOfRowsAffected = command.ExecuteNonQuery();
+                if (numberOfRowsAffected != 1)
                 {
-                    command.CommandText = $"update \"{_versionTableName}\" set " +
-                                          $"    \"Major\" = {changeScriptDatabaseVersion.Major}, " +
-                                          $"    \"Minor\" = {changeScriptDatabaseVersion.Minor}, " +
-                                          $"    \"Revision\" = {changeScriptDatabaseVersion.Revision}, " +
-                                          $"    \"ScriptNumber\" = {changeScriptDatabaseVersion.ScriptNumber} " +
-                                          $"where \"Major\" = {currentDatabaseVersion.Major} " +
-                                          $"and \"Minor\" = {currentDatabaseVersion.Minor} " +
-                                          $"and \"Revision\" = {currentDatabaseVersion.Revision} " +
-                                          $"and \"ScriptNumber\" = {currentDatabaseVersion.ScriptNumber} "
-                        ;
-                    command.Transaction = transaction;
-                    var numberOfRowsAffected = command.ExecuteNonQuery();
-                    if (numberOfRowsAffected != 1)
-                    {
-                        throw new Exception(
-                            "Database version has been changed (by another process concurrently?). " +
-                            "Please make sure the first change script creating the version table updates the database version to 0.0.0.0.");
-                    }
+                    throw new CannotUpdateVersionException(
+                        "Database version has been changed in the meantime, possibly by another process concurrently?");
                 }
+            }
+            catch (CannotUpdateVersionException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
