@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 	
-    <Version>1.2.3</Version>
+    <Version>1.2.4</Version>
     <AssemblyVersion>1.2.0.0</AssemblyVersion>
     <FileVersion>$(Version).0</FileVersion>
     <Description>Build a versioned database from sql script files in a directory structure.
@@ -20,8 +20,8 @@ Documentation: https://github.com/xhafan/databasebuilder/wiki</Description>
     <PackageProjectUrl>https://github.com/xhafan/databasebuilder</PackageProjectUrl>
 	<PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageReleaseNotes>Bug fix:  
-#6 Multiple database builders applying change scripts on the same database at the same time results in a deadlock - the first database builder updates the database version table first, so other database builders have to wait
+    <PackageReleaseNotes>Improvement:  
+#6 Multiple database builders applying change scripts on the same database at the same time results in a deadlock - trying two attempts to update the database so concurrent database builders are not failing
     </PackageReleaseNotes>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\DatabaseBuilder.snk</AssemblyOriginatorKeyFile>
