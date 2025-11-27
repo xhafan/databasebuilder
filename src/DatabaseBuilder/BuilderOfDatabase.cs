@@ -70,7 +70,7 @@ namespace DatabaseBuilder
 
                     break;
                 }
-                catch (CannotUpdateVersionException e)
+                catch (Exception e)
                 {
                     _logAction(e.Message);
                     if (attemptNumber == 2)
@@ -227,13 +227,9 @@ namespace DatabaseBuilder
                 var numberOfRowsAffected = command.ExecuteNonQuery();
                 if (numberOfRowsAffected != 1)
                 {
-                    throw new CannotUpdateVersionException(
+                    throw new Exception(
                         "Database version has been changed in the meantime, possibly by another process concurrently?");
                 }
-            }
-            catch (CannotUpdateVersionException)
-            {
-                throw;
             }
             catch (Exception ex)
             {
@@ -271,18 +267,23 @@ namespace DatabaseBuilder
 
             foreach (var sqlBatch in sqlBatches)
             {
-                using (var command = dbConnection.CreateCommand())
+                using var command = dbConnection.CreateCommand();
+                command.CommandText = sqlBatch;
+                command.Transaction = transaction;
+                try
                 {
-                    command.CommandText = sqlBatch;
-                    command.Transaction = transaction;
-                    try
-                    {
-                        command.ExecuteNonQuery();
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception($"Error executing script {sqlScriptFile}, sql batch:\n\n{sqlBatch}", ex);
-                    }
+                    command.ExecuteNonQuery();
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception(
+                        $"""
+                         Error executing script {sqlScriptFile}, sql batch:
+
+                         {sqlBatch}
+
+                         Error: {ex}
+                         """, ex);
                 }
             }
         }
